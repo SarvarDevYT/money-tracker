@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Download, 
   Upload, 
-  RotateCcw, 
+  Trash2, 
   FileSpreadsheet, 
   CheckCircle2
 } from 'lucide-react';
@@ -14,7 +14,7 @@ export const SettingsView: React.FC = () => {
     exportJSON, 
     importJSON, 
     exportCSV, 
-    resetToDemoData, 
+    clearAllData, 
     transactions,
     accounts,
     goals,
@@ -51,7 +51,7 @@ export const SettingsView: React.FC = () => {
           Sozlamalar va zaxira
         </h1>
         <p className="text-xs text-zinc-500">
-          Ma'lumotlarni saqlash, eksport va tizim sozlamalari
+          Ma'lumotlarni saqlash, eksport va tozalash
         </p>
       </div>
 
@@ -65,7 +65,7 @@ export const SettingsView: React.FC = () => {
       {/* Currency Exchange Rates */}
       <div className="p-4 rounded-xl bg-[#121215] border border-zinc-800/80 space-y-2">
         <h3 className="text-xs font-semibold text-zinc-200">Valyuta kurslari</h3>
-        <p className="text-[11px] text-zinc-500">Avtomatik hisob-kitoblar uchun</p>
+        <p className="text-[11px] text-zinc-500">Multi-valyuta operatsiyalari uchun</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
           <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
@@ -89,7 +89,7 @@ export const SettingsView: React.FC = () => {
           <div>
             <h3 className="text-xs font-semibold text-zinc-200">Zaxira nusxalash (Eksport)</h3>
             <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
-              Barcha operatsiyalarni JSON yoki Excel formatda yuklab oling.
+              Barcha operatsiyalarni JSON yoki Excel (CSV) formatda kompyuteringizga yuklab oling.
             </p>
           </div>
 
@@ -114,9 +114,9 @@ export const SettingsView: React.FC = () => {
 
         <div className="p-4 rounded-xl bg-[#121215] border border-zinc-800/80 flex flex-col justify-between space-y-3">
           <div>
-            <h3 className="text-xs font-semibold text-zinc-200">Qayta tiklash (Import)</h3>
+            <h3 className="text-xs font-semibold text-zinc-200">Qayta tiklash va tozalash</h3>
             <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
-              Oldin saqlangan JSON fayldan barcha yozuvlarni qaytarish.
+              JSON fayldan ma'lumotlarni qayta tiklash yoki butun bazani tozalash.
             </p>
           </div>
 
@@ -128,11 +128,11 @@ export const SettingsView: React.FC = () => {
             </label>
 
             <button
-              onClick={resetToDemoData}
-              className="w-full py-1.5 rounded-lg text-zinc-500 hover:text-rose-400 text-xs transition-colors flex items-center justify-center gap-1.5"
+              onClick={clearAllData}
+              className="w-full py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-medium border border-rose-500/20 transition-colors flex items-center justify-center gap-1.5"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Namuna holatiga qaytarish</span>
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Barcha ma'lumotlarni tozalash (0 qilish)</span>
             </button>
           </div>
         </div>
@@ -140,8 +140,8 @@ export const SettingsView: React.FC = () => {
 
       {/* System info */}
       <div className="p-3.5 rounded-xl bg-zinc-900/30 border border-zinc-800/60 text-xs flex items-center justify-between text-zinc-500">
-        <span>Bazada: {transactions.length} ta tranzaksiya, {accounts.length} ta hisob, {goals.length} ta maqsad</span>
-        <span>v1.0.0</span>
+        <span>Hozirda: {transactions.length} ta tranzaksiya, {accounts.length} ta hisob</span>
+        <span>Real rejim</span>
       </div>
     </div>
   );

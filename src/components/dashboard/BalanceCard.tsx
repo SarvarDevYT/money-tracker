@@ -4,20 +4,31 @@ import {
   EyeOff, 
   ArrowUpRight, 
   ArrowDownLeft, 
-  ArrowLeftRight,
-  Plus
+  Plus,
+  Edit3,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency } from '../../utils/formatters';
 
 interface BalanceCardProps {
-  onOpenTransfer: () => void;
   onOpenAddModal: (type: 'expense' | 'income') => void;
 }
 
-export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpenAddModal }) => {
-  const { accounts, totalBalanceInUZS, hideBalance, setHideBalance, totalIncomeThisMonth, totalExpenseThisMonth } = useApp();
+export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
+  const { 
+    accounts, 
+    totalBalanceInUZS, 
+    hideBalance, 
+    setHideBalance, 
+    totalIncomeThisMonth, 
+    totalExpenseThisMonth,
+    setAccountBalance 
+  } = useApp();
+
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
+  const [isEditBalanceOpen, setIsEditBalanceOpen] = useState(false);
+  const [newBalanceInput, setNewBalanceInput] = useState('');
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
 
@@ -28,6 +39,24 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpen
   const displayCurrency = selectedAccountId === 'all'
     ? 'UZS'
     : selectedAccount?.currency || 'UZS';
+
+  const handleOpenEditBalance = () => {
+    const current = selectedAccountId === 'all' ? (accounts[0]?.balance || 0) : (selectedAccount?.balance || 0);
+    setNewBalanceInput(current.toString());
+    setIsEditBalanceOpen(true);
+  };
+
+  const handleSaveBalance = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(newBalanceInput);
+    if (isNaN(val)) return;
+
+    const targetId = selectedAccountId === 'all' ? accounts[0]?.id : selectedAccountId;
+    if (targetId) {
+      setAccountBalance(targetId, val);
+    }
+    setIsEditBalanceOpen(false);
+  };
 
   return (
     <div className="rounded-2xl bg-[#121215] border border-zinc-800/90 p-5 sm:p-6 shadow-sm">
@@ -68,23 +97,33 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpen
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              {acc.name.split(' ')[0]}
+              {acc.name}
             </button>
           ))}
         </div>
       </div>
 
       {/* Main Balance */}
-      <div className="my-2">
+      <div className="my-2 flex flex-wrap items-baseline gap-3">
         <p className="text-3xl sm:text-4xl font-semibold tracking-tight text-white font-mono">
           {formatCurrency(displayBalance, displayCurrency, hideBalance)}
         </p>
-        {selectedAccountId === 'all' && (
-          <p className="text-xs text-zinc-500 mt-1 font-mono">
-            ≈ {formatCurrency(totalBalanceInUZS / 12850, 'USD', hideBalance)}
-          </p>
-        )}
+
+        <button
+          onClick={handleOpenEditBalance}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-medium border border-zinc-800 transition-colors"
+          title="Boshlang'ich yoki joriy balansni o'rnatish"
+        >
+          <Edit3 className="w-3 h-3" />
+          <span>Balansni kiritish</span>
+        </button>
       </div>
+
+      {displayBalance === 0 && (
+        <p className="text-[11px] text-zinc-500 mt-1">
+          Hozircha balans 0 so'm. Boshlang'ich mablag'ingizni kiritish uchun <b className="text-zinc-400">"Balansni kiritish"</b> yoki <b className="text-emerald-400">"+ Daromad"</b> tugmasidan foydalaning.
+        </p>
+      )}
 
       {/* Bottom Summary & Actions */}
       <div className="pt-5 mt-5 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
@@ -96,7 +135,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpen
             </div>
             <div>
               <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Kirim</p>
-              <p className="text-xs font-semibold text-zinc-200">
+              <p className="text-xs font-semibold text-zinc-200 font-mono">
                 +{formatCurrency(totalIncomeThisMonth, 'UZS', hideBalance)}
               </p>
             </div>
@@ -108,7 +147,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpen
             </div>
             <div>
               <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Chiqim</p>
-              <p className="text-xs font-semibold text-zinc-200">
+              <p className="text-xs font-semibold text-zinc-200 font-mono">
                 -{formatCurrency(totalExpenseThisMonth, 'UZS', hideBalance)}
               </p>
             </div>
@@ -117,13 +156,6 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpen
 
         {/* Quick action buttons */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenTransfer}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-800 transition-colors"
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5 text-zinc-400" />
-            <span>O'tkazma</span>
-          </button>
           <button
             onClick={() => onOpenAddModal('expense')}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-800 transition-colors"
@@ -140,6 +172,57 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenTransfer, onOpen
           </button>
         </div>
       </div>
+
+      {/* Edit Balance Modal */}
+      {isEditBalanceOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-sm rounded-2xl bg-[#121215] border border-zinc-800 p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-zinc-100">
+                Balansni o'rnatish
+              </h3>
+              <button 
+                onClick={() => setIsEditBalanceOpen(false)}
+                className="p-1 rounded text-zinc-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500">
+              {selectedAccountId === 'all' ? accounts[0]?.name : selectedAccount?.name} hisobingizdagi hozirgi real summani kiriting:
+            </p>
+
+            <form onSubmit={handleSaveBalance} className="space-y-3">
+              <input
+                type="number"
+                step="any"
+                required
+                placeholder="0.00"
+                value={newBalanceInput}
+                onChange={(e) => setNewBalanceInput(e.target.value)}
+                autoFocus
+                className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 font-mono text-lg outline-none focus:border-zinc-700"
+              />
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditBalanceOpen(false)}
+                  className="flex-1 py-2 rounded-lg bg-zinc-900 text-zinc-400 text-xs hover:text-white"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-semibold text-xs hover:bg-emerald-400"
+                >
+                  Saqlash
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

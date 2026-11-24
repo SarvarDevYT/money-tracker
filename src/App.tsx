@@ -14,7 +14,6 @@ import { DebtsView } from './components/debts/DebtsView';
 import { SubscriptionsView } from './components/subscriptions/SubscriptionsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { AddTransactionModal } from './components/modals/AddTransactionModal';
-import { TransferModal } from './components/modals/TransferModal';
 import { TransactionType } from './types';
 
 const MainApp: React.FC = () => {
@@ -23,7 +22,6 @@ const MainApp: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalType, setModalType] = useState<TransactionType>('expense');
-  const [transferModalOpen, setTransferModalOpen] = useState(false);
 
   const handleOpenAddModal = (type: TransactionType = 'expense') => {
     setModalType(type);
@@ -35,7 +33,6 @@ const MainApp: React.FC = () => {
       {/* Top Navigation */}
       <Navbar
         onOpenAddModal={handleOpenAddModal}
-        onOpenTransferModal={() => setTransferModalOpen(true)}
         onToggleMobileMenu={() => setMobileMenuOpen(prev => !prev)}
       />
 
@@ -51,7 +48,6 @@ const MainApp: React.FC = () => {
           {activeTab === 'dashboard' && (
             <div className="space-y-4">
               <BalanceCard 
-                onOpenTransfer={() => setTransferModalOpen(true)}
                 onOpenAddModal={handleOpenAddModal}
               />
 
@@ -98,16 +94,11 @@ const MainApp: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Modals */}
+      {/* Add Transaction Modal */}
       <AddTransactionModal
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         defaultType={modalType}
-      />
-
-      <TransferModal
-        isOpen={transferModalOpen}
-        onClose={() => setTransferModalOpen(false)}
       />
     </div>
   );

@@ -7,7 +7,6 @@ import {
   Debt, 
   Subscription, 
   FilterState, 
-  TimeRangeFilter, 
   CurrencyType 
 } from '../types';
 import { 
@@ -45,6 +44,7 @@ interface AppContextType {
 
   addAccount: (account: Omit<Account, 'id'>) => void;
   editAccount: (account: Account) => void;
+  setAccountBalance: (accountId: string, newBalance: number) => void;
   deleteAccount: (id: string) => void;
   transferFunds: (fromAccountId: string, toAccountId: string, amount: number, note?: string) => void;
 
@@ -64,7 +64,7 @@ interface AppContextType {
   totalBalanceInUZS: number;
   totalIncomeThisMonth: number;
   totalExpenseThisMonth: number;
-  resetToDemoData: () => void;
+  clearAllData: () => void;
   exportJSON: () => void;
   importJSON: (jsonString: string) => boolean;
   exportCSV: () => void;
@@ -72,10 +72,21 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'money_tracker_pro_v1';
+// Clean storage key for real zero-state production
+const STORAGE_KEY = 'money_tracker_live_v3';
+
+// One-time cleanup of any older demo versions from user's browser
+try {
+  ['money_tracker_pro_v1', 'money_tracker_pro_v2', 'money_tracker_data_v1'].forEach(prefix => {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(prefix)) {
+        localStorage.removeItem(key);
+      }
+    });
+  });
+} catch (_) {}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load saved data or initialize with demo data
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_transactions`);
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
@@ -149,7 +160,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Calculations
   const totalBalanceInUZS = accounts.reduce((acc, a) => acc + convertToUZS(a.balance, a.currency), 0);
 
-  const currentYearMonth = new Date().toISOString().slice(0, 7); // e.g. "2026-11"
+  const currentYearMonth = new Date().toISOString().slice(0, 7);
   
   const thisMonthTransactions = transactions.filter(t => t.date.startsWith(currentYearMonth));
   const totalIncomeThisMonth = thisMonthTransactions
@@ -184,7 +195,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
 
-    // Revert account balance
     setAccounts(prev => prev.map(acc => {
       if (acc.id === tx.accountId) {
         const reverseDelta = tx.type === 'income' ? -tx.amount : tx.amount;
@@ -201,14 +211,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const oldTx = transactions.find(t => t.id === updatedTx.id);
     if (!oldTx) return;
 
-    // Adjust balances
     setAccounts(prev => prev.map(acc => {
       let balance = acc.balance;
-      // Revert old transaction if applied to this account
       if (acc.id === oldTx.accountId) {
         balance += oldTx.type === 'income' ? -oldTx.amount : oldTx.amount;
       }
-      // Apply new transaction if applied to this account
       if (acc.id === updatedTx.accountId) {
         balance += updatedTx.type === 'income' ? updatedTx.amount : -updatedTx.amount;
       }
@@ -248,6 +255,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAccounts(prev => prev.map(a => a.id === updatedAcc.id ? updatedAcc : a));
   };
 
+  const setAccountBalance = (accountId: string, newBalance: number) => {
+    setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, balance: newBalance } : a));
+  };
+
   const deleteAccount = (id: string) => {
     setAccounts(prev => prev.filter(a => a.id !== id));
   };
@@ -257,11 +268,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const toAcc = accounts.find(a => a.id === toAccountId);
     if (!fromAcc || !toAcc || amount <= 0) return;
 
-    // Reduce from source, add to target
     setAccounts(prev => prev.map(a => {
       if (a.id === fromAccountId) return { ...a, balance: a.balance - amount };
       if (a.id === toAccountId) {
-        // If currencies are different, convert based on rate
         let convertedAmount = amount;
         if (fromAcc.currency !== toAcc.currency) {
           const uzsAmount = convertToUZS(amount, fromAcc.currency);
@@ -275,10 +284,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toTimeString().slice(0, 5);
-
-    // Record as transfer transaction pair or note
     const transferTx: Transaction = {
       id: `tr-transfer-${Date.now()}`,
       type: 'expense',
@@ -286,8 +291,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currency: fromAcc.currency,
       categoryId: 'cat-other-exp',
       accountId: fromAccountId,
-      date: dateStr,
-      time: timeStr,
+      date: now.toISOString().split('T')[0],
+      time: now.toTimeString().slice(0, 5),
       description: `O'tkazma: ${toAcc.name} hisobiga ${note ? `(${note})` : ''}`
     };
     setTransactions(prev => [transferTx, ...prev]);
@@ -312,7 +317,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return g;
     }));
 
-    // If deducted from an account
     if (fromAccountId) {
       setAccounts(prev => prev.map(a => {
         if (a.id === fromAccountId) {
@@ -352,12 +356,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return d;
     }));
 
-    // If an account is linked, update its balance
     if (accountId) {
       setAccounts(prev => prev.map(a => {
         if (a.id === accountId) {
-          // If borrowed: paying it back is an expense (-amount)
-          // If lent: receiving it back is income (+amount)
           const delta = targetDebt.type === 'borrowed' ? -amount : amount;
           return { ...a, balance: a.balance + delta };
         }
@@ -388,15 +389,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSubscriptions(prev => prev.filter(s => s.id !== id));
   };
 
-  // Reset to Demo
-  const resetToDemoData = () => {
-    if (window.confirm("Barcha ma'lumotlar boshlang'ich namuna holatiga qaytarilsinmi?")) {
-      setTransactions(INITIAL_TRANSACTIONS);
+  // Clear all data to 0 (Real use)
+  const clearAllData = () => {
+    if (window.confirm("Rostdan ham barcha ma'lumotlarni tozalab, hammasini 0 holatiga keltirmoqchimisiz?")) {
+      setTransactions([]);
+      setGoals([]);
+      setDebts([]);
+      setSubscriptions([]);
+      setAccounts(prev => prev.map(a => ({ ...a, balance: 0 })));
       setCategories(INITIAL_CATEGORIES);
-      setAccounts(INITIAL_ACCOUNTS);
-      setGoals(INITIAL_GOALS);
-      setDebts(INITIAL_DEBTS);
-      setSubscriptions(INITIAL_SUBSCRIPTIONS);
     }
   };
 
@@ -477,6 +478,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteCategory,
         addAccount,
         editAccount,
+        setAccountBalance,
         deleteAccount,
         transferFunds,
         addGoal,
@@ -491,7 +493,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         totalBalanceInUZS,
         totalIncomeThisMonth,
         totalExpenseThisMonth,
-        resetToDemoData,
+        clearAllData,
         exportJSON,
         importJSON,
         exportCSV,

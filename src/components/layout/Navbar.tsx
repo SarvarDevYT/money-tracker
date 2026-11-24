@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  ArrowLeftRight,
   Eye, 
   EyeOff, 
   Plus, 
@@ -11,13 +10,11 @@ import { formatCurrency, formatDateUz } from '../../utils/formatters';
 
 interface NavbarProps {
   onOpenAddModal: (type?: 'expense' | 'income') => void;
-  onOpenTransferModal: () => void;
   onToggleMobileMenu: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   onOpenAddModal, 
-  onOpenTransferModal,
   onToggleMobileMenu 
 }) => {
   const { totalBalanceInUZS, hideBalance, setHideBalance } = useApp();
@@ -54,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="hidden md:flex items-center gap-4 px-3.5 py-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
           <div className="flex items-center gap-2 text-xs">
             <span className="text-zinc-400">Jami balans:</span>
-            <span className="font-semibold text-zinc-100 tracking-tight">
+            <span className="font-semibold text-zinc-100 tracking-tight font-mono">
               {formatCurrency(totalBalanceInUZS, 'UZS', hideBalance)}
             </span>
             <button 
@@ -72,19 +69,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right: Clean Action Buttons */}
         <div className="flex items-center gap-2">
           <button
-            onClick={onOpenTransferModal}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-800 transition-colors"
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5 text-zinc-400" />
-            <span>O'tkazma</span>
-          </button>
-
-          <button
             onClick={() => onOpenAddModal('expense')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-800 transition-colors"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span>Xarajat</span>
+            <span>- Xarajat</span>
           </button>
 
           <button
@@ -92,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold shadow-sm transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Daromad</span>
+            <span>+ Daromad</span>
           </button>
         </div>
 
