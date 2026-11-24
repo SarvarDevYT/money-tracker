@@ -2,7 +2,11 @@ import React from 'react';
 import { 
   Eye, 
   EyeOff, 
-  Plus
+  Plus,
+  Cloud,
+  LogOut,
+  User as UserIcon,
+  RefreshCw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDateUz } from '../../utils/formatters';
@@ -14,7 +18,15 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ 
   onOpenAddModal
 }) => {
-  const { totalBalanceInUZS, hideBalance, setHideBalance } = useApp();
+  const { 
+    totalBalanceInUZS, 
+    hideBalance, 
+    setHideBalance,
+    user,
+    setIsAuthModalOpen,
+    signOut,
+    isCloudSyncing
+  } = useApp();
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
@@ -53,8 +65,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[11px] text-zinc-500">{formatDateUz(todayStr)}</span>
         </div>
 
-        {/* Right: Quick Action Buttons */}
+        {/* Right: Cloud Sync & Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Cloud Status / Auth Button */}
+          {user ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+              <Cloud className={`w-3.5 h-3.5 ${isCloudSyncing ? 'animate-pulse' : ''}`} />
+              <span className="max-w-[100px] sm:max-w-[130px] truncate hidden xs:inline text-[11px]">
+                {user.email?.split('@')[0]}
+              </span>
+              <button
+                onClick={() => signOut()}
+                className="p-0.5 hover:text-rose-400 transition-colors ml-0.5"
+                title="Chiqish"
+              >
+                <LogOut className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-medium transition-colors"
+              title="Bulutli saqlashni yoqish uchun tizimga kiring"
+            >
+              <Cloud className="w-3.5 h-3.5 text-sky-400" />
+              <span className="text-[11px]">Bulutga ulash</span>
+            </button>
+          )}
+
           {/* Mobile eye button */}
           <button 
             onClick={() => setHideBalance(prev => !prev)}

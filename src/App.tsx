@@ -15,10 +15,11 @@ import { DebtsView } from './components/debts/DebtsView';
 import { SubscriptionsView } from './components/subscriptions/SubscriptionsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { AddTransactionModal } from './components/modals/AddTransactionModal';
+import { AuthModal } from './components/modals/AuthModal';
 import { TransactionType } from './types';
 
 const MainApp: React.FC = () => {
-  const { activeTab } = useApp();
+  const { activeTab, isAuthModalOpen, setIsAuthModalOpen } = useApp();
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalType, setModalType] = useState<TransactionType>('expense');
@@ -101,6 +102,12 @@ const MainApp: React.FC = () => {
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         defaultType={modalType}
+      />
+
+      {/* Cloud Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </div>
   );
