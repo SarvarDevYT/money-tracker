@@ -86,9 +86,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
       <div 
-        className="w-full max-w-md rounded-2xl bg-[#121215] border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-[#121215] border-t sm:border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -98,37 +98,37 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           </h2>
           <button 
             onClick={onClose}
-            className="p-1 rounded-md text-zinc-400 hover:text-white"
+            className="p-1.5 rounded-md text-zinc-400 hover:text-white"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-3.5 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3.5 overflow-y-auto pb-8 sm:pb-4">
           {/* Type Toggle */}
           <div className="grid grid-cols-2 p-0.5 bg-zinc-900 rounded-lg border border-zinc-800 text-xs">
             <button
               type="button"
               onClick={() => setType('expense')}
-              className={`py-1.5 rounded-md font-medium transition-colors ${
+              className={`py-2 rounded-md font-medium transition-colors ${
                 type === 'expense'
-                  ? 'bg-zinc-800 text-zinc-100 font-semibold'
+                  ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              Xarajat
+              Xarajat (Chiqim)
             </button>
             <button
               type="button"
               onClick={() => setType('income')}
-              className={`py-1.5 rounded-md font-medium transition-colors ${
+              className={`py-2 rounded-md font-medium transition-colors ${
                 type === 'income'
-                  ? 'bg-zinc-800 text-zinc-100 font-semibold'
+                  ? 'bg-zinc-800 text-zinc-100 font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              Daromad
+              Daromad (Kirim)
             </button>
           </div>
 
@@ -167,7 +167,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     key={val}
                     type="button"
                     onClick={() => handleQuickAddAmount(val)}
-                    className="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] text-zinc-400 border border-zinc-800 transition-colors"
+                    className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] text-zinc-400 border border-zinc-800 transition-colors"
                   >
                     +{(val / 1000).toLocaleString()} ming
                   </button>
@@ -179,7 +179,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           {/* Category Picker */}
           <div className="space-y-1">
             <label className="text-[11px] text-zinc-400">Kategoriya</label>
-            <div className="grid grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-0.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-40 overflow-y-auto p-0.5">
               {availableCategories.map(cat => {
                 const isSelected = categoryId === cat.id;
                 return (
@@ -187,7 +187,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     key={cat.id}
                     type="button"
                     onClick={() => setCategoryId(cat.id)}
-                    className={`p-2 rounded-lg flex items-center gap-2 text-left text-xs transition-colors border ${
+                    className={`p-2 rounded-lg flex items-center gap-2 text-left text-xs transition-colors border min-h-[42px] ${
                       isSelected
                         ? 'bg-zinc-800 border-zinc-650 text-white font-medium'
                         : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200'
@@ -212,7 +212,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     key={acc.id}
                     type="button"
                     onClick={() => handleAccountChange(acc.id)}
-                    className={`p-2 rounded-lg text-left text-xs transition-colors border ${
+                    className={`p-2 rounded-lg text-left text-xs transition-colors border min-h-[42px] ${
                       isSelected
                         ? 'bg-zinc-800 border-zinc-650 text-white font-medium'
                         : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200'
@@ -265,7 +265,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs transition-colors"
+              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition-colors shadow-md"
             >
               Saqlash
             </button>

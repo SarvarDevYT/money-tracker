@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
+import { BottomNav } from './components/layout/BottomNav';
 import { BalanceCard } from './components/dashboard/BalanceCard';
 import { QuickStats } from './components/dashboard/QuickStats';
 import { RecentTransactions } from './components/dashboard/RecentTransactions';
@@ -19,7 +20,6 @@ import { TransactionType } from './types';
 const MainApp: React.FC = () => {
   const { activeTab } = useApp();
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalType, setModalType] = useState<TransactionType>('expense');
 
@@ -33,27 +33,26 @@ const MainApp: React.FC = () => {
       {/* Top Navigation */}
       <Navbar
         onOpenAddModal={handleOpenAddModal}
-        onToggleMobileMenu={() => setMobileMenuOpen(prev => !prev)}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        {/* Sidebar */}
+        {/* Desktop Sidebar (visible on lg screens) */}
         <Sidebar
-          mobileOpen={mobileMenuOpen}
-          onCloseMobile={() => setMobileMenuOpen(false)}
+          mobileOpen={false}
+          onCloseMobile={() => {}}
         />
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-5xl">
+        {/* Main Content Area (with bottom padding for mobile bar) */}
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 pb-28 lg:pb-8 overflow-y-auto max-w-5xl w-full">
           {activeTab === 'dashboard' && (
-            <div className="space-y-4">
+            <div className="space-y-3.5 sm:space-y-4">
               <BalanceCard 
                 onOpenAddModal={handleOpenAddModal}
               />
 
               <QuickStats />
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
                 <div className="lg:col-span-2">
                   <RecentTransactions onOpenAddModal={handleOpenAddModal} />
                 </div>
@@ -93,6 +92,9 @@ const MainApp: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Mobile Fixed Bottom Navigation Bar */}
+      <BottomNav onOpenAddModal={handleOpenAddModal} />
 
       {/* Add Transaction Modal */}
       <AddTransactionModal
