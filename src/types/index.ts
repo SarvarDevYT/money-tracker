@@ -1,4 +1,4 @@
-export type TransactionType = 'expense' | 'income';
+export type TransactionType = 'expense' | 'income' | 'transfer';
 
 export type CurrencyType = 'UZS' | 'USD' | 'RUB';
 
@@ -28,6 +28,7 @@ export interface Transaction {
   currency: CurrencyType;
   categoryId: string;
   accountId: string;
+  toAccountId?: string;
   date: string; // YYYY-MM-DD
   time: string; // HH:mm
   description?: string;

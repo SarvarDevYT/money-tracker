@@ -195,13 +195,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
 
-    setAccounts(prev => prev.map(acc => {
-      if (acc.id === tx.accountId) {
-        const reverseDelta = tx.type === 'income' ? -tx.amount : tx.amount;
-        return { ...acc, balance: acc.balance + reverseDelta };
-      }
-      return acc;
-    }));
+    if (tx.type === 'transfer' && tx.toAccountId) {
+      // Revert transfer: refund fromAccount, deduct toAccount
+      setAccounts(prev => {
+        const fromAcc = prev.find(a => a.id === tx.accountId);
+        const toAcc = prev.find(a => a.id === tx.toAccountId);
+        let convertedAmount = tx.amount;
+        if (fromAcc && toAcc && fromAcc.currency !== toAcc.currency) {
+          const uzsAmount = convertToUZS(tx.amount, fromAcc.currency);
+          if (toAcc.currency === 'USD') convertedAmount = uzsAmount / 12850;
+          else if (toAcc.currency === 'RUB') convertedAmount = uzsAmount / 135;
+          else convertedAmount = uzsAmount;
+        }
+
+        return prev.map(acc => {
+          if (acc.id === tx.accountId) {
+            return { ...acc, balance: acc.balance + tx.amount };
+          }
+          if (acc.id === tx.toAccountId) {
+            return { ...acc, balance: acc.balance - convertedAmount };
+          }
+          return acc;
+        });
+      });
+    } else {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === tx.accountId) {
+          const reverseDelta = tx.type === 'income' ? -tx.amount : tx.amount;
+          return { ...acc, balance: acc.balance + reverseDelta };
+        }
+        return acc;
+      }));
+    }
 
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
@@ -286,14 +311,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const now = new Date();
     const transferTx: Transaction = {
       id: `tr-transfer-${Date.now()}`,
-      type: 'expense',
+      type: 'transfer',
       amount,
       currency: fromAcc.currency,
       categoryId: 'cat-other-exp',
       accountId: fromAccountId,
+      toAccountId: toAccountId,
       date: now.toISOString().split('T')[0],
       time: now.toTimeString().slice(0, 5),
-      description: `O'tkazma: ${toAcc.name} hisobiga ${note ? `(${note})` : ''}`
+      description: `O'tkazma: ${fromAcc.name} ➔ ${toAcc.name}${note ? ` (${note})` : ''}`
     };
     setTransactions(prev => [transferTx, ...prev]);
   };
@@ -447,7 +473,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const rows = transactions.map(t => {
       const cat = categories.find(c => c.id === t.categoryId)?.name || t.categoryId;
       const acc = accounts.find(a => a.id === t.accountId)?.name || t.accountId;
-      const typeText = t.type === 'income' ? 'Daromad' : 'Xarajat';
+      const typeText = t.type === 'income' ? 'Daromad' : t.type === 'transfer' ? "O'tkazma" : 'Xarajat';
       const cleanDesc = (t.description || '').replace(/"/g, '""');
       return `"${t.id}","${typeText}",${t.amount},"${t.currency}","${cat}","${acc}","${t.date}","${t.time}","${cleanDesc}"`;
     }).join("\n");

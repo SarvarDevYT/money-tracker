@@ -4,7 +4,8 @@ import {
   Download, 
   Plus, 
   Trash2, 
-  X
+  X,
+  ArrowRightLeft
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDateUz, convertToUZS } from '../../utils/formatters';
@@ -25,7 +26,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
   } = useApp();
 
   const [search, setSearch] = useState('');
-  const [selectedType, setSelectedType] = useState<'all' | 'expense' | 'income'>('all');
+  const [selectedType, setSelectedType] = useState<'all' | 'expense' | 'income' | 'transfer'>('all');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<'all' | 'today' | 'week' | 'month'>('month');
@@ -187,6 +188,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
             <option value="all">Barcha turlar</option>
             <option value="expense">Faqat xarajat</option>
             <option value="income">Faqat daromad</option>
+            <option value="transfer">O'tkazmalar</option>
           </select>
 
           <select
@@ -234,7 +236,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
             {filteredTransactions.map(tx => {
               const category = categories.find(c => c.id === tx.categoryId);
               const account = accounts.find(a => a.id === tx.accountId);
+              const toAccount = tx.toAccountId ? accounts.find(a => a.id === tx.toAccountId) : null;
               const isIncome = tx.type === 'income';
+              const isTransfer = tx.type === 'transfer';
 
               return (
                 <div 
@@ -242,17 +246,27 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
                   className="p-3 sm:p-3.5 flex items-center justify-between gap-2.5 sm:gap-3 group hover:bg-zinc-900/30 transition-colors"
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
-                      <IconRenderer name={category?.icon || 'CircleDot'} className="w-4 h-4" />
+                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${
+                      isTransfer 
+                        ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' 
+                        : isIncome 
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                    }`}>
+                      {isTransfer ? (
+                        <ArrowRightLeft className="w-4 h-4" />
+                      ) : (
+                        <IconRenderer name={category?.icon || 'CircleDot'} className="w-4 h-4" />
+                      )}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <p className="text-xs font-medium text-zinc-200 truncate">
-                          {category?.name || 'Kategoriya'}
+                          {isTransfer ? "Hisoblar o'rtasida o'tkazma" : (category?.name || 'Kategoriya')}
                         </p>
                         <span className="text-[10px] text-zinc-500 truncate">
-                          • {account?.name}
+                          • {isTransfer ? `${account?.name} ➔ ${toAccount?.name || 'Boshqa hisob'}` : account?.name}
                         </span>
                       </div>
                       <p className="text-[11px] text-zinc-500 truncate mt-0.5">
@@ -263,8 +277,14 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
 
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <div className="text-right">
-                      <p className={`text-xs sm:text-sm font-semibold font-mono ${isIncome ? 'text-emerald-400' : 'text-zinc-200'}`}>
-                        {isIncome ? '+' : '-'}{formatCurrency(tx.amount, tx.currency, hideBalance)}
+                      <p className={`text-xs sm:text-sm font-semibold font-mono ${
+                        isIncome 
+                          ? 'text-emerald-400' 
+                          : isTransfer 
+                            ? 'text-sky-400' 
+                            : 'text-zinc-200'
+                      }`}>
+                        {isIncome ? '+' : isTransfer ? '⇄ ' : '-'}{formatCurrency(tx.amount, tx.currency, hideBalance)}
                       </p>
                       <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
                         {formatDateUz(tx.date)}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.sarvardev.moneytracker",
+  "appName": "MoneyTracker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -28,6 +28,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
 
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [isEditBalanceOpen, setIsEditBalanceOpen] = useState(false);
+  const [editTargetAccountId, setEditTargetAccountId] = useState<string>('');
   const [newBalanceInput, setNewBalanceInput] = useState('');
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
@@ -41,9 +42,17 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
     : selectedAccount?.currency || 'UZS';
 
   const handleOpenEditBalance = () => {
-    const current = selectedAccountId === 'all' ? (accounts[0]?.balance || 0) : (selectedAccount?.balance || 0);
-    setNewBalanceInput(current.toString());
+    const targetId = selectedAccountId === 'all' ? (accounts[0]?.id || '') : selectedAccountId;
+    setEditTargetAccountId(targetId);
+    const acc = accounts.find(a => a.id === targetId);
+    setNewBalanceInput((acc?.balance || 0).toString());
     setIsEditBalanceOpen(true);
+  };
+
+  const handleSelectAccountForEdit = (accId: string) => {
+    setEditTargetAccountId(accId);
+    const acc = accounts.find(a => a.id === accId);
+    setNewBalanceInput((acc?.balance || 0).toString());
   };
 
   const handleSaveBalance = (e: React.FormEvent) => {
@@ -51,9 +60,8 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
     const val = parseFloat(newBalanceInput);
     if (isNaN(val)) return;
 
-    const targetId = selectedAccountId === 'all' ? accounts[0]?.id : selectedAccountId;
-    if (targetId) {
-      setAccountBalance(targetId, val);
+    if (editTargetAccountId) {
+      setAccountBalance(editTargetAccountId, val);
     }
     setIsEditBalanceOpen(false);
   };
@@ -184,45 +192,65 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
       {/* Edit Balance Modal (Responsive Bottom Sheet on Mobile) */}
       {isEditBalanceOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-[#121215] border-t sm:border border-zinc-800 p-5 pb-8 sm:pb-5 space-y-3 shadow-2xl">
+          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-[#121215] border-t sm:border border-zinc-800 p-5 pb-8 sm:pb-5 space-y-3.5 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-zinc-100">
-                Balansni o'rnatish
-              </h3>
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-100">
+                  Balansni kiritish / to'g'rilash
+                </h3>
+                <p className="text-[11px] text-zinc-500">
+                  Hisobingizdagi hozirgi real qoldiq summasi
+                </p>
+              </div>
               <button 
                 onClick={() => setIsEditBalanceOpen(false)}
-                className="p-1 rounded text-zinc-400 hover:text-white"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-zinc-500">
-              {selectedAccountId === 'all' ? accounts[0]?.name : selectedAccount?.name} hisobingizdagi hozirgi real summani kiriting:
-            </p>
 
             <form onSubmit={handleSaveBalance} className="space-y-3">
-              <input
-                type="number"
-                step="any"
-                required
-                placeholder="0.00"
-                value={newBalanceInput}
-                onChange={(e) => setNewBalanceInput(e.target.value)}
-                autoFocus
-                className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 font-mono text-lg outline-none focus:border-zinc-700"
-              />
+              <div>
+                <label className="text-[11px] text-zinc-400 font-medium">Qaysi hisob balansi o'zgartirilsin:</label>
+                <select
+                  value={editTargetAccountId}
+                  onChange={(e) => handleSelectAccountForEdit(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 outline-none focus:border-zinc-700 mt-1"
+                >
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} (Hozirgi: {formatCurrency(acc.balance, acc.currency, hideBalance)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] text-zinc-400 font-medium">Haqiqiy balans summasi ({accounts.find(a => a.id === editTargetAccountId)?.currency || 'UZS'}):</label>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="0.00"
+                  value={newBalanceInput}
+                  onChange={(e) => setNewBalanceInput(e.target.value)}
+                  autoFocus
+                  className="w-full p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100 font-mono text-lg outline-none focus:border-zinc-700 mt-1"
+                />
+              </div>
 
               <div className="flex items-center gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsEditBalanceOpen(false)}
-                  className="flex-1 py-2 rounded-lg bg-zinc-900 text-zinc-400 text-xs hover:text-white"
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white text-xs font-medium border border-zinc-800 transition-colors"
                 >
                   Bekor qilish
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-semibold text-xs hover:bg-emerald-400"
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs transition-colors"
                 >
                   Saqlash
                 </button>
