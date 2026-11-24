@@ -15,11 +15,11 @@ import { DebtsView } from './components/debts/DebtsView';
 import { SubscriptionsView } from './components/subscriptions/SubscriptionsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { AddTransactionModal } from './components/modals/AddTransactionModal';
-import { AuthModal } from './components/modals/AuthModal';
+import { AuthScreen } from './components/auth/AuthScreen';
 import { TransactionType } from './types';
 
 const MainApp: React.FC = () => {
-  const { activeTab, isAuthModalOpen, setIsAuthModalOpen } = useApp();
+  const { activeTab, user, authLoading } = useApp();
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalType, setModalType] = useState<TransactionType>('expense');
@@ -29,6 +29,24 @@ const MainApp: React.FC = () => {
     setAddModalOpen(true);
   };
 
+  // 1. Initial loading screen while checking session
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xl animate-pulse">
+          M
+        </div>
+        <p className="text-xs text-zinc-500 font-medium mt-3">Yuklanmoqda...</p>
+      </div>
+    );
+  }
+
+  // 2. Mandatory Authentication Gate: if user is not logged in, show AuthScreen
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  // 3. User is authenticated -> show full MoneyTracker application
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-zinc-800 selection:text-white">
       {/* Top Navigation */}
@@ -102,12 +120,6 @@ const MainApp: React.FC = () => {
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         defaultType={modalType}
-      />
-
-      {/* Cloud Authentication Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
       />
     </div>
   );
