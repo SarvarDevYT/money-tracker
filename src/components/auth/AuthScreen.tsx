@@ -12,6 +12,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { Logo } from '../common/Logo';
 
 export const AuthScreen: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -98,9 +99,7 @@ export const AuthScreen: React.FC = () => {
       <div className="w-full max-w-md relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-2xl shadow-lg shadow-emerald-950/20 mb-1">
-            M
-          </div>
+          <Logo size="lg" className="mx-auto mb-1" />
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             MoneyTracker
           </h1>

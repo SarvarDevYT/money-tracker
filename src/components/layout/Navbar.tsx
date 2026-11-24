@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDateUz } from '../../utils/formatters';
+import { Logo } from '../common/Logo';
 
 interface NavbarProps {
   onOpenAddModal: (type?: 'expense' | 'income') => void;
@@ -34,17 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
         {/* Left: Brand */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs sm:text-sm">
-            M
-          </div>
-          <div>
-            <span className="font-semibold text-xs sm:text-sm tracking-tight text-zinc-100">
-              MoneyTracker
-            </span>
-            <p className="text-[10px] text-zinc-500 hidden sm:block">Shaxsiy moliya boshqaruvi</p>
-          </div>
-        </div>
+        <Logo size="sm" withText />
 
         {/* Center: Desktop Balance Summary */}
         <div className="hidden md:flex items-center gap-4 px-3.5 py-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/70">

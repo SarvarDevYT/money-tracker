@@ -18,6 +18,7 @@ import { AddTransactionModal } from './components/modals/AddTransactionModal';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
 import { TermsOfService } from './components/legal/TermsOfService';
+import { Logo } from './components/common/Logo';
 import { TransactionType } from './types';
 
 const MainApp: React.FC = () => {
@@ -49,9 +50,7 @@ const MainApp: React.FC = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-4">
-        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xl animate-pulse">
-          M
-        </div>
+        <Logo size="lg" className="animate-pulse" />
         <p className="text-xs text-zinc-500 font-medium mt-3">Yuklanmoqda...</p>
       </div>
     );
