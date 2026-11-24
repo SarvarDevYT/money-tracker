@@ -16,6 +16,8 @@ import { SubscriptionsView } from './components/subscriptions/SubscriptionsView'
 import { SettingsView } from './components/settings/SettingsView';
 import { AddTransactionModal } from './components/modals/AddTransactionModal';
 import { AuthScreen } from './components/auth/AuthScreen';
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
+import { TermsOfService } from './components/legal/TermsOfService';
 import { TransactionType } from './types';
 
 const MainApp: React.FC = () => {
@@ -28,6 +30,20 @@ const MainApp: React.FC = () => {
     setModalType(type);
     setAddModalOpen(true);
   };
+
+  // Public Legal Pages (accessible without authentication)
+  const currentPath = window.location.pathname.toLowerCase();
+  const currentHash = window.location.hash.toLowerCase();
+  const searchParams = new URLSearchParams(window.location.search);
+  const viewParam = searchParams.get('view')?.toLowerCase();
+
+  if (currentPath === '/privacy' || currentHash === '#privacy' || viewParam === 'privacy') {
+    return <PrivacyPolicy />;
+  }
+
+  if (currentPath === '/terms' || currentHash === '#terms' || viewParam === 'terms') {
+    return <TermsOfService />;
+  }
 
   // 1. Initial loading screen while checking session
   if (authLoading) {

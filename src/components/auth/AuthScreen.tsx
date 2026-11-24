@@ -260,6 +260,17 @@ export const AuthScreen: React.FC = () => {
             <span className="text-[10px] leading-tight">100% o'chmas xotira</span>
           </div>
         </div>
+
+        {/* Legal links */}
+        <div className="flex items-center justify-center gap-4 text-[11px] text-zinc-500 pt-2">
+          <a href="/privacy" className="hover:text-emerald-400 transition-colors underline decoration-zinc-700">
+            Maxfiylik siyosati
+          </a>
+          <span>•</span>
+          <a href="/terms" className="hover:text-emerald-400 transition-colors underline decoration-zinc-700">
+            Foydalanish shartlari
+          </a>
+        </div>
       </div>
     </div>
   );
