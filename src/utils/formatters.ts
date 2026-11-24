@@ -1,7 +1,8 @@
 import { CurrencyType } from '../types';
+import { getStoredRates, CurrencyRates } from '../services/currencyService';
 
 export const USD_TO_UZS = 12850;
-export const RUB_TO_UZS = 135;
+export const RUB_TO_UZS = 145;
 
 export const formatCurrency = (
   amount: number,
@@ -29,9 +30,14 @@ export const formatCurrency = (
   }
 };
 
-export const convertToUZS = (amount: number, currency: CurrencyType): number => {
-  if (currency === 'USD') return amount * USD_TO_UZS;
-  if (currency === 'RUB') return amount * RUB_TO_UZS;
+export const convertToUZS = (
+  amount: number, 
+  currency: CurrencyType,
+  customRates?: CurrencyRates
+): number => {
+  const rates = customRates || getStoredRates();
+  if (currency === 'USD') return amount * rates.USD;
+  if (currency === 'RUB') return amount * rates.RUB;
   return amount;
 };
 

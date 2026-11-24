@@ -19,6 +19,7 @@ import {
   INITIAL_SUBSCRIPTIONS 
 } from '../constants/initialData';
 import { convertToUZS, downloadCSV } from '../utils/formatters';
+import { CurrencyRates, getStoredRates, fetchLiveRates } from '../services/currencyService';
 
 interface AppContextType {
   user: User | null;
@@ -27,6 +28,9 @@ interface AppContextType {
   setIsAuthModalOpen: (open: boolean) => void;
   signOut: () => Promise<void>;
   isCloudSyncing: boolean;
+
+  currencyRates: CurrencyRates;
+  refreshCurrencyRates: () => Promise<void>;
 
   transactions: Transaction[];
   categories: Category[];
@@ -128,6 +132,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     timeRange: 'month',
     type: 'all'
   });
+
+  // Currency Rates (Central Bank live sync + offline fallback)
+  const [currencyRates, setCurrencyRates] = useState<CurrencyRates>(() => getStoredRates());
+
+  useEffect(() => {
+    fetchLiveRates().then(rates => {
+      setCurrencyRates(rates);
+    });
+  }, []);
+
+  const refreshCurrencyRates = async () => {
+    const rates = await fetchLiveRates();
+    setCurrencyRates(rates);
+  };
 
   // Local storage persistence (always keeps an offline backup)
   useEffect(() => {
@@ -338,18 +356,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Calculations
-  const totalBalanceInUZS = accounts.reduce((acc, a) => acc + convertToUZS(a.balance, a.currency), 0);
+  const totalBalanceInUZS = accounts.reduce((acc, a) => acc + convertToUZS(a.balance, a.currency, currencyRates), 0);
 
   const currentYearMonth = new Date().toISOString().slice(0, 7);
   
   const thisMonthTransactions = transactions.filter(t => t.date.startsWith(currentYearMonth));
   const totalIncomeThisMonth = thisMonthTransactions
     .filter(t => t.type === 'income')
-    .reduce((acc, t) => acc + convertToUZS(t.amount, t.currency), 0);
+    .reduce((acc, t) => acc + convertToUZS(t.amount, t.currency, currencyRates), 0);
 
   const totalExpenseThisMonth = thisMonthTransactions
     .filter(t => t.type === 'expense')
-    .reduce((acc, t) => acc + convertToUZS(t.amount, t.currency), 0);
+    .reduce((acc, t) => acc + convertToUZS(t.amount, t.currency, currencyRates), 0);
 
   // Add Transaction
   const addTransaction = (data: Omit<Transaction, 'id'>) => {
@@ -403,9 +421,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const toAcc = prev.find(a => a.id === tx.toAccountId);
         let convertedAmount = tx.amount;
         if (fromAcc && toAcc && fromAcc.currency !== toAcc.currency) {
-          const uzsAmount = convertToUZS(tx.amount, fromAcc.currency);
-          if (toAcc.currency === 'USD') convertedAmount = uzsAmount / 12850;
-          else if (toAcc.currency === 'RUB') convertedAmount = uzsAmount / 135;
+          const uzsAmount = convertToUZS(tx.amount, fromAcc.currency, currencyRates);
+          if (toAcc.currency === 'USD') convertedAmount = uzsAmount / currencyRates.USD;
+          else if (toAcc.currency === 'RUB') convertedAmount = uzsAmount / currencyRates.RUB;
           else convertedAmount = uzsAmount;
         }
 
@@ -574,9 +592,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     let convertedAmount = amount;
     if (fromAcc.currency !== toAcc.currency) {
-      const uzsAmount = convertToUZS(amount, fromAcc.currency);
-      if (toAcc.currency === 'USD') convertedAmount = uzsAmount / 12850;
-      else if (toAcc.currency === 'RUB') convertedAmount = uzsAmount / 135;
+      const uzsAmount = convertToUZS(amount, fromAcc.currency, currencyRates);
+      if (toAcc.currency === 'USD') convertedAmount = uzsAmount / currencyRates.USD;
+      else if (toAcc.currency === 'RUB') convertedAmount = uzsAmount / currencyRates.RUB;
       else convertedAmount = uzsAmount;
     }
 
@@ -867,6 +885,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsAuthModalOpen,
         signOut,
         isCloudSyncing,
+        currencyRates,
+        refreshCurrencyRates,
         transactions,
         categories,
         accounts,

@@ -19,6 +19,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
   const { 
     accounts, 
     totalBalanceInUZS, 
+    currencyRates,
     hideBalance, 
     setHideBalance, 
     totalIncomeThisMonth, 
@@ -129,9 +130,13 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ onOpenAddModal }) => {
         </div>
 
         {selectedAccountId === 'all' && (
-          <p className="text-[11px] text-zinc-500 mt-1 font-mono">
-            ≈ {formatCurrency(totalBalanceInUZS / 12850, 'USD', hideBalance)}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[11px] text-zinc-500 mt-1 font-mono">
+            <span>≈ {formatCurrency(totalBalanceInUZS / currencyRates.USD, 'USD', hideBalance)}</span>
+            <span className="text-zinc-700">•</span>
+            <span className="text-zinc-400">$1 = {currencyRates.USD.toLocaleString('ru-RU')} so'm</span>
+            <span className="text-zinc-700">•</span>
+            <span className="text-zinc-400">1₽ = {currencyRates.RUB.toLocaleString('ru-RU')} so'm</span>
+          </div>
         )}
       </div>
 
