@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { TransactionType, CurrencyType } from '../../types';
 import { IconRenderer } from '../common/IconRenderer';
+import { useSwipeDownToClose } from '../../hooks/useSwipeDownToClose';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   defaultType = 'expense'
 }) => {
   const { categories, accounts, addTransaction } = useApp();
+  const { sheetStyle, handlers } = useSwipeDownToClose(onClose, 80);
 
   const [type, setType] = useState<TransactionType>(defaultType);
   const [amount, setAmount] = useState<string>('');
@@ -86,22 +88,32 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn no-swipe"
+    >
       <div 
-        className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-[#121215] border-t sm:border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        style={sheetStyle}
+        className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-[#121215] border-t sm:border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-sheetUp sm:animate-fadeIn"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-4 pb-3 border-b border-zinc-850 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-100">
-            {type === 'expense' ? "Xarajat kiritish" : "Daromad kiritish"}
-          </h2>
-          <button 
-            onClick={onClose}
-            className="p-1.5 rounded-md text-zinc-400 hover:text-white"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        {/* Header (Swipe-down handle on mobile) */}
+        <div 
+          {...handlers}
+          className="p-4 pt-2.5 sm:pt-4 pb-3 border-b border-zinc-850 flex flex-col gap-2 cursor-grab active:cursor-grabbing"
+        >
+          <div className="w-10 h-1 rounded-full bg-zinc-700/80 mx-auto sm:hidden" />
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-100">
+              {type === 'expense' ? "Xarajat kiritish" : "Daromad kiritish"}
+            </h2>
+            <button 
+              onClick={onClose}
+              className="p-1.5 rounded-md text-zinc-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Form Body */}

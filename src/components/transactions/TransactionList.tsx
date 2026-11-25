@@ -3,13 +3,11 @@ import {
   Search, 
   Download, 
   Plus, 
-  Trash2, 
-  X,
-  ArrowRightLeft
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { formatCurrency, formatDateUz, convertToUZS } from '../../utils/formatters';
-import { IconRenderer } from '../common/IconRenderer';
+import { formatCurrency, convertToUZS } from '../../utils/formatters';
+import { SwipeableTransactionRow } from './SwipeableTransactionRow';
 
 interface TransactionListProps {
   onOpenAddModal: (type?: 'expense' | 'income') => void;
@@ -22,7 +20,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
     accounts, 
     deleteTransaction, 
     exportCSV, 
-    hideBalance 
+    hideBalance,
+    currencyRates
   } = useApp();
 
   const [search, setSearch] = useState('');
@@ -62,11 +61,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
 
   const filteredIncome = filteredTransactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + convertToUZS(t.amount, t.currency), 0);
+    .reduce((sum, t) => sum + convertToUZS(t.amount, t.currency, currencyRates), 0);
 
   const filteredExpense = filteredTransactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + convertToUZS(t.amount, t.currency), 0);
+    .reduce((sum, t) => sum + convertToUZS(t.amount, t.currency, currencyRates), 0);
 
   const resetFilters = () => {
     setSearch('');
@@ -237,73 +236,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({ onOpenAddModal
               const category = categories.find(c => c.id === tx.categoryId);
               const account = accounts.find(a => a.id === tx.accountId);
               const toAccount = tx.toAccountId ? accounts.find(a => a.id === tx.toAccountId) : null;
-              const isIncome = tx.type === 'income';
-              const isTransfer = tx.type === 'transfer';
 
               return (
-                <div 
+                <SwipeableTransactionRow
                   key={tx.id}
-                  className="p-3 sm:p-3.5 flex items-center justify-between gap-2.5 sm:gap-3 group hover:bg-zinc-900/30 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${
-                      isTransfer 
-                        ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' 
-                        : isIncome 
-                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-300'
-                    }`}>
-                      {isTransfer ? (
-                        <ArrowRightLeft className="w-4 h-4" />
-                      ) : (
-                        <IconRenderer name={category?.icon || 'CircleDot'} className="w-4 h-4" />
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-medium text-zinc-200 truncate">
-                          {isTransfer ? "Hisoblar o'rtasida o'tkazma" : (category?.name || 'Kategoriya')}
-                        </p>
-                        <span className="text-[10px] text-zinc-500 truncate">
-                          • {isTransfer ? `${account?.name} ➔ ${toAccount?.name || 'Boshqa hisob'}` : account?.name}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 truncate mt-0.5">
-                        {tx.description || "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <div className="text-right">
-                      <p className={`text-xs sm:text-sm font-semibold font-mono ${
-                        isIncome 
-                          ? 'text-emerald-400' 
-                          : isTransfer 
-                            ? 'text-sky-400' 
-                            : 'text-zinc-200'
-                      }`}>
-                        {isIncome ? '+' : isTransfer ? '⇄ ' : '-'}{formatCurrency(tx.amount, tx.currency, hideBalance)}
-                      </p>
-                      <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
-                        {formatDateUz(tx.date)}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        if (window.confirm("O'chirilsinmi?")) {
-                          deleteTransaction(tx.id);
-                        }
-                      }}
-                      className="p-1.5 text-zinc-600 hover:text-rose-400 transition-colors"
-                      title="O'chirish"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
+                  tx={tx}
+                  category={category}
+                  account={account}
+                  toAccount={toAccount}
+                  hideBalance={hideBalance}
+                  onDelete={deleteTransaction}
+                />
               );
             })}
           </div>

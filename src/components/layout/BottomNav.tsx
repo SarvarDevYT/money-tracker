@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useSwipeDownToClose } from '../../hooks/useSwipeDownToClose';
 
 interface BottomNavProps {
   onOpenAddModal: (type?: 'expense' | 'income') => void;
@@ -21,6 +22,8 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ onOpenAddModal }) => {
   const { activeTab, setActiveTab, debts, goals } = useApp();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+
+  const { sheetStyle, handlers } = useSwipeDownToClose(() => setIsMoreOpen(false), 75);
 
   const pendingDebts = debts.filter(d => !d.completed).length;
 
@@ -51,7 +54,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenAddModal }) => {
           />
 
           {/* Sheet */}
-          <div className="fixed bottom-0 left-0 right-0 bg-[#121215] border-t border-zinc-800 rounded-t-2xl p-5 pb-8 space-y-4 animate-fadeIn z-10 shadow-2xl">
+          <div 
+            style={sheetStyle}
+            {...handlers}
+            className="fixed bottom-0 left-0 right-0 bg-[#121215] border-t border-zinc-800 rounded-t-2xl p-5 pt-3 pb-8 space-y-4 animate-sheetUp z-10 shadow-2xl no-swipe"
+          >
+            {/* Drag Handle */}
+            <div className="w-10 h-1 rounded-full bg-zinc-700/80 mx-auto" />
+
             <div className="flex items-center justify-between pb-2 border-b border-zinc-850">
               <span className="text-sm font-semibold text-zinc-200">Boshqa bo'limlar</span>
               <button 
