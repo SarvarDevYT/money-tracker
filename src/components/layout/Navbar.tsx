@@ -31,8 +31,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
-    <header className="sticky top-0 z-30 bg-[#09090b]/95 backdrop-blur-md border-b border-zinc-800/80 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+    <header className="sticky top-0 z-30 bg-[#09090b]/95 backdrop-blur-md border-b border-zinc-800/80 px-4 sm:px-6 lg:px-8 pt-safe pb-2.5 sm:py-3 transition-all">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
         
         {/* Left: Brand */}
         <Logo size="sm" withText />
@@ -56,46 +56,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="text-[11px] text-zinc-500">{formatDateUz(todayStr)}</span>
         </div>
 
-        {/* Right: Cloud Sync & Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Cloud Status / Auth Button */}
-          {user ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
-              <Cloud className={`w-3.5 h-3.5 ${isCloudSyncing ? 'animate-pulse' : ''}`} />
-              <span className="max-w-[100px] sm:max-w-[130px] truncate hidden xs:inline text-[11px]">
-                {user.email?.split('@')[0]}
-              </span>
-              <button
-                onClick={() => signOut()}
-                className="p-0.5 hover:text-rose-400 transition-colors ml-0.5"
-                title="Chiqish"
-              >
-                <LogOut className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsAuthModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-medium transition-colors"
-              title="Bulutli saqlashni yoqish uchun tizimga kiring"
-            >
-              <Cloud className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-[11px]">Bulutga ulash</span>
-            </button>
-          )}
-
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
           {/* Mobile eye button */}
           <button 
             onClick={() => setHideBalance(prev => !prev)}
-            className="md:hidden p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-zinc-800 bg-zinc-900/80"
-            title={hideBalance ? "Ko'rsatish" : "Yashirish"}
+            className="md:hidden p-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-zinc-800/90 bg-zinc-900/80 active:scale-95 transition-all"
+            title={hideBalance ? "Balansni ko'rsatish" : "Balansni yashirish"}
           >
-            {hideBalance ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {hideBalance ? <EyeOff className="w-4 h-4 text-emerald-400" /> : <Eye className="w-4 h-4" />}
           </button>
 
+          {/* Desktop quick action buttons (hidden on mobile to prevent crowding) */}
           <button
             onClick={() => onOpenAddModal('expense')}
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-[11px] sm:text-xs font-medium border border-zinc-800 transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-800 transition-colors"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
             <span>Xarajat</span>
@@ -103,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => onOpenAddModal('income')}
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-[11px] sm:text-xs font-semibold shadow-sm transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold shadow-sm transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Daromad</span>

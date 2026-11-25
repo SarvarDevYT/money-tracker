@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
@@ -32,6 +34,19 @@ const MainApp: React.FC = () => {
     setModalType(type);
     setAddModalOpen(true);
   };
+
+  // Configure Native Status Bar so it does not overlay content
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        StatusBar.setStyle({ style: Style.Dark });
+        StatusBar.setBackgroundColor({ color: '#09090b' });
+        StatusBar.setOverlaysWebView({ overlay: false });
+      } catch (err) {
+        console.error('StatusBar setup error:', err);
+      }
+    }
+  }, []);
 
   // Public Legal Pages (accessible without authentication)
   const currentPath = window.location.pathname.toLowerCase();
