@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Logo } from '../common/Logo';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 export const AuthScreen: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -28,14 +30,34 @@ export const AuthScreen: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const isNative = Capacitor.isNativePlatform();
+      const redirectUrl = isNative
+        ? 'https://money-tracker-pro-steel.vercel.app/auth-callback'
+        : `${window.location.origin}/auth-callback`;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: isNative,
         },
       });
 
       if (error) throw error;
+
+      if (isNative && data?.url) {
+        // Reset loading if user dismisses the in-app browser
+        const browserSub = await Browser.addListener('browserFinished', () => {
+          setLoading(false);
+          browserSub.remove();
+        });
+
+        await Browser.open({ 
+          url: data.url, 
+          windowName: '_self',
+          presentationStyle: 'popover'
+        });
+      }
     } catch (err: any) {
       if (
         err.message?.toLowerCase().includes('provider is not enabled') ||

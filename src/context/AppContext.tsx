@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '../lib/supabase';
 import { 
   Transaction, 
@@ -176,7 +179,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${STORAGE_KEY}_hideBalance`, String(hideBalance));
   }, [hideBalance]);
 
-  // Auth session listener
+  // Auth session listener and Native Deep Linking
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -190,7 +193,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAuthLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Capacitor Native Deep Link Listener for OAuth callback
+    let removeAppListener: (() => void) | undefined;
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener('appUrlOpen', async (event) => {
+        try {
+          await Browser.close();
+        } catch {
+          // ignore if already closed
+        }
+
+        const url = event.url;
+        if (
+          url.includes('auth-callback') || 
+          url.includes('access_token') || 
+          url.includes('code=')
+        ) {
+          let hashOrSearch = '';
+          if (url.includes('#')) {
+            hashOrSearch = url.substring(url.indexOf('#') + 1);
+          } else if (url.includes('?')) {
+            hashOrSearch = url.substring(url.indexOf('?') + 1);
+          }
+
+          const params = new URLSearchParams(hashOrSearch);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          const code = params.get('code');
+
+          if (accessToken && refreshToken) {
+            const { data } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (data?.user) {
+              setUser(data.user);
+            }
+          } else if (code) {
+            const { data } = await supabase.auth.exchangeCodeForSession(code);
+            if (data?.user) {
+              setUser(data.user);
+            }
+          }
+        }
+      }).then(handle => {
+        removeAppListener = () => handle.remove();
+      });
+    }
+
+    return () => {
+      subscription.unsubscribe();
+      if (removeAppListener) removeAppListener();
+    };
   }, []);
 
   // Fetch or migrate cloud data when user changes

@@ -18,6 +18,7 @@ import { AddTransactionModal } from './components/modals/AddTransactionModal';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
 import { TermsOfService } from './components/legal/TermsOfService';
+import { AuthCallback } from './components/auth/AuthCallback';
 import { Logo } from './components/common/Logo';
 import { TransactionType } from './types';
 
@@ -44,6 +45,10 @@ const MainApp: React.FC = () => {
 
   if (currentPath === '/terms' || currentHash === '#terms' || viewParam === 'terms') {
     return <TermsOfService />;
+  }
+
+  if (currentPath === '/auth-callback' || currentPath.startsWith('/auth-callback') || currentHash.startsWith('#auth-callback')) {
+    return <AuthCallback />;
   }
 
   // 1. Initial loading screen while checking session
