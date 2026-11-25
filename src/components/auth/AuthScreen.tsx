@@ -105,7 +105,14 @@ export const AuthScreen: React.FC = () => {
         setInfoMsg("Xush kelibsiz! Tizimga kirdingiz...");
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+      const msg = err?.message?.toLowerCase() || '';
+      if (msg.includes('invalid login credentials')) {
+        setErrorMsg(
+          "Email yoki parol noto'g'ri. Agar avval Google orqali kirgan bo'lsangiz, Google tugmasi bilan kiring va Sozlamalardan parol o'rnating."
+        );
+      } else {
+        setErrorMsg(err.message || "Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+      }
     } finally {
       setLoading(false);
     }

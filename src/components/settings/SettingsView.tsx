@@ -8,10 +8,13 @@ import {
   Cloud,
   LogOut,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  KeyRound,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { USD_TO_UZS, RUB_TO_UZS } from '../../utils/formatters';
+import { supabase } from '../../lib/supabase';
 
 export const SettingsView: React.FC = () => {
   const { 
@@ -24,10 +27,66 @@ export const SettingsView: React.FC = () => {
     user,
     setIsAuthModalOpen,
     signOut,
-    isCloudSyncing
+    isCloudSyncing,
+    currencyRates
   } = useApp();
 
   const [importSuccess, setImportSuccess] = useState(false);
+
+  // Password setup / change state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
+  const hasEmailProvider = Boolean(
+    user?.app_metadata?.providers?.includes('email') ||
+    user?.identities?.some(i => i.provider === 'email')
+  );
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (newPassword.length < 6) {
+      setPasswordError("Parol kamida 6 ta belgidan iborat bo'lishi kerak.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Parollar bir-biriga mos kelmadi.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordSuccess(
+        `Parol muvaffaqiyatli saqlandi! Endi ham Google, ham ${user?.email} va ushbu parol orqali kira olasiz.`
+      );
+    } catch (err: any) {
+      const msg = err?.message?.toLowerCase() || '';
+      if (msg.includes('same password') || msg.includes('different from the old')) {
+        setPasswordError("Yangi parol avvalgi parolingizdan farq qilishi kerak.");
+      } else if (msg.includes('weak') || msg.includes('at least')) {
+        setPasswordError("Parol juda oddiy, murakkabroq va kamida 6 ta belgili parol kiriting.");
+      } else {
+        setPasswordError("Parolni saqlashda xatolik yuz berdi. Qaytadan urinib ko'ring.");
+      }
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -131,6 +190,97 @@ export const SettingsView: React.FC = () => {
         )}
       </div>
 
+      {/* Password Setup / Security Card */}
+      {user && (
+        <div className="p-4 rounded-xl bg-[#121215] border border-zinc-800/80 space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
+                hasEmailProvider
+                  ? 'bg-zinc-900 border-zinc-800 text-emerald-400'
+                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+              }`}>
+                <KeyRound className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold text-zinc-200">
+                  {hasEmailProvider ? "Kirish parolini yangilash" : "Hisobingizga parol o'rnating"}
+                </h3>
+                <p className="text-[11px] text-zinc-500 leading-relaxed">
+                  {hasEmailProvider
+                    ? `Siz ham Google, ham ${user.email} + parol orqali tizimga kira olasiz.`
+                    : `Google orqali kirgansiz. Parol o'rnatsangiz, keyinchalik ${user.email} va parol bilan ham kira olasiz.`}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {passwordError && (
+            <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>{passwordError}</span>
+            </div>
+          )}
+
+          {passwordSuccess && (
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>{passwordSuccess}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSetPassword} className="space-y-2.5 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Yangi parol (kamida 6 ta belgi)"
+                  minLength={6}
+                  required
+                  className="w-full px-3 py-2 pr-9 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                  title={showPassword ? "Yashirish" : "Ko'rsatish"}
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Parolni tasdiqlang"
+                  minLength={6}
+                  required
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={passwordLoading || !newPassword || !confirmPassword}
+                className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 text-xs font-semibold transition-colors"
+              >
+                {passwordLoading
+                  ? "Saqlanmoqda..."
+                  : hasEmailProvider
+                  ? "Parolni yangilash"
+                  : "Parolni o'rnatish"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Currency Exchange Rates */}
       <div className="p-4 rounded-xl bg-[#121215] border border-zinc-800/80 space-y-2">
         <h3 className="text-xs font-semibold text-zinc-200">Valyuta kurslari</h3>
@@ -139,11 +289,11 @@ export const SettingsView: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
           <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
             <p className="text-[10px] text-zinc-500">1 USD</p>
-            <p className="text-xs font-semibold font-mono text-zinc-200 mt-0.5">≈ {USD_TO_UZS.toLocaleString()} so'm</p>
+            <p className="text-xs font-semibold font-mono text-zinc-200 mt-0.5">≈ {currencyRates.USD.toLocaleString('ru-RU')} so'm</p>
           </div>
           <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
             <p className="text-[10px] text-zinc-500">1 RUB</p>
-            <p className="text-xs font-semibold font-mono text-zinc-200 mt-0.5">≈ {RUB_TO_UZS.toLocaleString()} so'm</p>
+            <p className="text-xs font-semibold font-mono text-zinc-200 mt-0.5">≈ {currencyRates.RUB.toLocaleString('ru-RU')} so'm</p>
           </div>
           <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 col-span-2 sm:col-span-1">
             <p className="text-[10px] text-zinc-500">Asosiy valyuta</p>
